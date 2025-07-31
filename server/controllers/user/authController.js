@@ -1,11 +1,9 @@
-// Importación de librerías y modelos necesarios
-const jwt = require('jsonwebtoken'); // Librería para generar y verificar tokens JWT
-const User = require('../../models/User'); // Modelo de usuario
-const { validationResult } = require('express-validator'); // Middleware para validar datos enviados en la solicitud
+import jwt from 'jsonwebtoken';
+import User from '../../models/User.js';
+import { validationResult } from 'express-validator';
 
 // Función para crear un token
-// Genera un token JWT basado en el ID del usuario y su rol con una expiración de 2 horas
-const createToken = (user) => {
+export const createToken = (user) => {
   return jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 };
 
@@ -13,28 +11,24 @@ const createToken = (user) => {
 //                            REGISTRO DE USUARIO
 //===============================================================================
 
-const register = async (req, res) => {
-  // Validar los datos de la solicitud utilizando express-validator
+export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() }); // Si hay errores, responder con un código 400 y los detalles
+    return res.status(400).json({ errors: errors.array() });
   }
 
-  // Extraer los datos del cuerpo de la solicitud
   const { email, password, firstName, lastName } = req.body;
 
   try {
-    // Verificar si ya existe un usuario con el correo proporcionado
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'El usuario ya existe' }); // Si existe, responder con un error 400
+      return res.status(400).json({ message: 'El usuario ya existe' });
     }
 
-    // Crear un nuevo usuario con los datos proporcionados y valores predeterminados
-    const user = new User({ 
-      email, 
-      password, 
-      firstName, 
+    const user = new User({
+      email,
+      password,
+      firstName,
       lastName,
       phone: "",
       province: "",
@@ -48,23 +42,21 @@ const register = async (req, res) => {
       },
     });
 
-    // Si el DNI está presente y válido, se agrega
     if (req.body.dni && req.body.dni.trim() !== "") {
-        user.dni = req.body.dni.trim();
-      }
+      user.dni = req.body.dni.trim();
+    }
 
-    try { 
-      await user.save(); // Guardar el usuario en la base de datos
+    try {
+      await user.save();
     } catch (error) {
-      console.error('Error al guardar el usuario:', error); // Manejo de errores al guardar
+      console.error('Error al guardar el usuario:', error);
       return res.status(400).json({ message: 'Error al guardar el usuario', error });
     }
-    
-    // Crear y devolver el token junto con información del usuario
+
     const token = createToken(user);
     res.status(201).json({
       token,
-      user: { 
+      user: {
         email: user.email,
         role: user.role,
         firstName: user.firstName,
@@ -72,7 +64,7 @@ const register = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error al registrar el usuario', error }); // Manejo de errores generales del servidor
+    res.status(500).json({ message: 'Error al registrar el usuario', error });
   }
 };
 
@@ -80,28 +72,23 @@ const register = async (req, res) => {
 //                          INICIO DE SESION DE USUARIO
 //===============================================================================
 
-const login = async (req, res) => {
-  // Validar los datos de la solicitud utilizando express-validator
+export const login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() }); // Si hay errores, responder con un código 400 y los detalles
+    return res.status(400).json({ errors: errors.array() });
   }
 
-  // Extraer los datos del cuerpo de la solicitud
   const { email, password } = req.body;
 
   try {
-    // Buscar usuario en la base de datos por correo electrónico
     console.log('Buscando usuario por email: ', email);
     const user = await User.findOne({ email });
     if (!user) {
       console.log('Usuario no encontrado');
-      return res.status(401).json({ message: 'Credenciales invalidas' }); // Si no se encuentra, devolver un error 401
+      return res.status(401).json({ message: 'Credenciales invalidas' });
     }
 
     console.log('Hash de la contraseña almacenada: ', user.password);
-
-    // Verificar que la contraseña proporcionada coincida con la guardada
     console.log('Verificando contraseña...');
     console.log('Contraseña ingresada por el usuario: ', password);
 
@@ -109,20 +96,19 @@ const login = async (req, res) => {
     console.log('Resultado de la comparacion: ', isMatch);
     if (!isMatch) {
       console.log('Contraseña incorrecta');
-      return res.status(401).json({ message: 'Credenciales invalidas' }); // Si no coinciden, devolver un error 401
+      return res.status(401).json({ message: 'Credenciales invalidas' });
     }
 
-    // Crear y devolver un token junto con información del usuario
     const token = createToken(user);
     console.log('Token creado: ', token);
-    res.status(200).json({ 
-      token, 
-      user: { 
-        email: user.email, 
+    res.status(200).json({
+      token,
+      user: {
+        email: user.email,
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone || "", // Devolver valores predeterminados si faltan
+        phone: user.phone || "",
         dni: user.dni || "",
         province: user.province || "",
         address: user.address || {},
@@ -130,9 +116,6 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.log('Error en el login: ', error);
-    res.status(500).json({ message: 'Error al iniciar sesion', error }); // Manejo de errores generales del servidor
+    res.status(500).json({ message: 'Error al iniciar sesion', error });
   }
 };
-
-// Exportar las funciones para ser utilizadas en otros módulos
-module.exports = { register, login };

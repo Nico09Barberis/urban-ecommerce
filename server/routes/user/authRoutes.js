@@ -1,10 +1,11 @@
-const express = require('express'); 
-const jwt = require('jsonwebtoken'); // Librería para generar y verificar tokens JWT
-const { body, validationResult, check } = require('express-validator'); // Middleware para validar datos enviados en las solicitudes
-const User = require('../models/User'); 
-const router = express.Router(); 
-const { register, login } = require('../controllers/authController'); // Importación de los controladores de autenticación
-const { verifyToken } = require('../middlewares/roleMiddleware'); // Middleware para verificar autenticación
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { body, validationResult, check } from 'express-validator';
+import User from '../../models/User.js';
+import { register, login } from '../../controllers/user/authController.js';
+import { verifyToken } from '../../middlewares/roleMiddleware.js';
+
+const router = express.Router();
 
 //==============================================================================
 //                            RUTA PARA EL REGISTRO
@@ -164,4 +165,4 @@ router.put('/update-address', verifyToken, async (req, res) => {
 });
 
 
-module.exports = router; // Exporta el router para usarlo en otros módulos de la aplicación
+export default router;// Exporta el router para usarlo en otros módulos de la aplicación

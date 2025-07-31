@@ -1,5 +1,5 @@
 // Importación del paquete JWT para la generación y verificación de tokens
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 //================================================================================
 //           MIDDLEWARE PARA VERIFICAR SI EL TOKEN ES VALIDO
@@ -48,4 +48,4 @@ const verifyAdmin = (req, res, next) => {
 };
 
 // Exportacion los middlewares para utilizarlos en otras partes de la aplicación
-module.exports = { verifyToken, verifyAdmin };
+export { verifyToken, verifyAdmin };
